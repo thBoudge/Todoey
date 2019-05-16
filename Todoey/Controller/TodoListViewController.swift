@@ -29,7 +29,7 @@ class TodoListViewController: UITableViewController {
         super.viewDidLoad()
         
         //local adress of dataBase
-//        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
     }
 
