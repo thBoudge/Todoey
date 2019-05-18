@@ -7,22 +7,22 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
+
 
 class CategoryViewController: UITableViewController {
 
+    let realm = try! Realm() // we can use ! because cannot fel
     
-    var categoryArray = [Category]()
+    // we type with Results
+    var categoryArray : Results<Category>?
 
- 
-    //we create criable context
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        loadItems()
+        loadCategories()
     }
 
 
@@ -37,12 +37,11 @@ class CategoryViewController: UITableViewController {
                 
                 
                 //we create item
-                let newCategory = Category(context: self.context)
-                newCategory.name = textField.text
-                self.categoryArray.append(newCategory)
+                let newCategory = Category()
+                newCategory.name = textField.text!
                 
-                ///// method NSCoder \\\\\
-                self.saveItems()
+                
+                self.save(category: newCategory)
                 
             }
             self.tableView.reloadData()
@@ -62,12 +61,12 @@ class CategoryViewController: UITableViewController {
     }
     
     //MARK: - Data manipulation Methods
-    // method ENCODE to save Item with NSCoder
-    func saveItems() {
-        
-        //we save context on CoreDatabase (persistant container)
+    func save(category : Category) {
+        //MARK: - Add with Realm
         do {
-            try  context.save()
+            try  realm.write {
+                realm.add(category)
+            }
         }catch{
             print("Error saving context \(error)")
         }
@@ -75,16 +74,12 @@ class CategoryViewController: UITableViewController {
         
     }
     
-    // method DECODE to Load Item with NSCoder
-    //Method with default value = Item.fetchRequest()
-    func loadItems(with request: NSFetchRequest<Category> = Category.fetchRequest()){
+    
+    func loadCategories(){
+       
+        //MARK: -  get all object from realm Data base
+        categoryArray = realm.objects(Category.self)
         
-        do {
-            //we load data in item array
-            categoryArray = try context.fetch(request)
-        } catch{
-            print("Error fetching data from context \(error)")
-        }
         tableView.reloadData()
     }
     
@@ -96,14 +91,14 @@ extension CategoryViewController {
     //MARK: - TableView DataSource Methods
     //number of row In section
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categoryArray.count
+        return categoryArray?.count ?? 1
     }
     
     //cell that will ne created with text
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
-        let category = categoryArray[indexPath.row]
-        cell.textLabel?.text = category.name
+        
+        cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "no Categories added"
         
         return cell
         
@@ -125,7 +120,7 @@ extension CategoryViewController {
         //identify which cell have been pressed
         if  let indexPath = tableView.indexPathForSelectedRow {
             //we inform where we send data in other viewController
-            destinationVC.selectedCategory = categoryArray[indexPath.row]
+            destinationVC.selectedCategory = categoryArray?[indexPath.row]
         }
         
     }
